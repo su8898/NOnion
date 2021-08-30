@@ -106,41 +106,48 @@ type TorGuard private (client: TcpClient, sslStream: SslStream) =
                     |> Array.take Constants.CircuitIdLength
                     |> IntegerSerialization.FromBigEndianByteArrayToUInt16
 
-                // Command is only one byte in size
-                let command =
+                let commandSingleton =
                     header
                     |> Array.skip Constants.CommandOffset
-                    |> Array.exactlyOne
 
-                let! maybeBodyLength =
-                    async {
-                        if Command.IsVariableLength command then
-                            let! maybeLengthBytes =
-                                StreamUtil.ReadFixedSize
-                                    sslStream
-                                    Constants.VariableLengthBodyPrefixLength
+                let maybeCommand =
+                    commandSingleton
+                    |> Array.tryExactlyOne
 
-                            match maybeLengthBytes with
-                            | Some lengthBytes ->
-                                return
-                                    lengthBytes
-                                    |> IntegerSerialization.FromBigEndianByteArrayToUInt16
-                                    |> int
-                                    |> Some
-                            | None -> return None
-                        else
-                            return Constants.FixedPayloadLength |> Some
-                    }
+                match maybeCommand with
+                | None ->
+                    return failwithf "command is supposed to be only 1 byte in size, but got %i" commandSingleton.Length
+                | Some command ->
 
-                match maybeBodyLength with
-                | Some bodyLength ->
-                    let! maybeBody =
-                        StreamUtil.ReadFixedSize sslStream bodyLength
+                    let! maybeBodyLength =
+                        async {
+                            if Command.IsVariableLength command then
+                                let! maybeLengthBytes =
+                                    StreamUtil.ReadFixedSize
+                                        sslStream
+                                        Constants.VariableLengthBodyPrefixLength
 
-                    match maybeBody with
-                    | Some body -> return Some (circuitId, command, body)
+                                match maybeLengthBytes with
+                                | Some lengthBytes ->
+                                    return
+                                        lengthBytes
+                                        |> IntegerSerialization.FromBigEndianByteArrayToUInt16
+                                        |> int
+                                        |> Some
+                                | None -> return None
+                            else
+                                return Constants.FixedPayloadLength |> Some
+                        }
+
+                    match maybeBodyLength with
+                    | Some bodyLength ->
+                        let! maybeBody =
+                            StreamUtil.ReadFixedSize sslStream bodyLength
+
+                        match maybeBody with
+                        | Some body -> return Some (circuitId, command, body)
+                        | None -> return None
                     | None -> return None
-                | None -> return None
             | None -> return None
         }
 

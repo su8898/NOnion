@@ -269,7 +269,7 @@
     "trailingNewLineInFile": { "enabled": false },
     "noTabCharacters": { "enabled": true },
     "noPartialFunctions": {
-        "enabled": false,
+        "enabled": true,
         "config": {
             "allowedPartials": [],
             "additionalPartials": []

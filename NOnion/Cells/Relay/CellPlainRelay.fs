@@ -9,6 +9,8 @@ open NOnion.Utility
 
 type OptionAlias<'a> = Option<'a>
 
+type camelCaseOptionAlias<'T> = Option<'T>
+
 type EndReason =
     | Misc = 1uy
     | ResolveFailed = 2uy

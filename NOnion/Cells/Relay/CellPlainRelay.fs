@@ -7,8 +7,7 @@ open NOnion
 open NOnion.Cells
 open NOnion.Utility
 
-type OptionAlias<'a> =
-    Option<'a>
+type OptionAlias<'a> = Option<'a>
 
 type EndReason =
     | Misc = 1uy

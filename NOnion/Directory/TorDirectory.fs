@@ -160,7 +160,8 @@ type TorDirectory =
                  *)
                 do!
                     match directoryRouter.GetIdentity ()
-                          |> self.ServerDescriptors.TryFind with
+                          |> self.ServerDescriptors.TryFind
+                        with
                     | None -> CircuitNodeDetail.FastCreate
                     | Some serverDescriptor ->
                         self.ConvertToCircuitNodeDetail serverDescriptor
